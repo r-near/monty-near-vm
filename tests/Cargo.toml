@@ -1,0 +1,27 @@
+[package]
+name = "monty-near-vm-tests"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.86"
+
+[[test]]
+name = "sandbox"
+path = "src/sandbox.rs"
+
+[[bin]]
+name = "deploy-testnet"
+path = "src/deploy_testnet.rs"
+
+[[bin]]
+name = "test-deploy-direct"
+path = "src/test_deploy_direct.rs"
+
+[[bin]]
+name = "run-testnet"
+path = "src/run_testnet.rs"
+
+[dependencies]
+near-kit = { version = "0.7", features = ["sandbox", "keyring"] }
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+base64 = "0.22"

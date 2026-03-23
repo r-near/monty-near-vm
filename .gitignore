@@ -1,0 +1,8 @@
+/target
+/deployer/target
+/tests/target
+Cargo.lock
+tests/contract.test.ts
+tests/package.json
+tests/node_modules
+tests/bun.lock
