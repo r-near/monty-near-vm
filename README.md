@@ -332,7 +332,7 @@ A hybrid contract mixing near-sdk methods (for `store_chunk`, `assemble`, `reset
 | NEAR transaction size limit | 1.5 MB | Can't deploy 3.2 MB contract directly; requires chunked upload via deployer |
 | NEAR max contract size | 4 MB | VM contract at 3.1 MB fits with margin |
 | Trie proof size limit (testnet) | 4 MB | Can't read+write 3.2 MB in one receipt; `deploy_direct` reads ~3.2 MB (under limit), deploy action runs in separate receipt |
-| Trie proof size limit (sandbox) | Disabled | `assemble` + register-trick `deploy` works on sandbox but not testnet |
+| Trie proof size limit (sandbox) | Not enforced | `assemble` + register-trick `deploy` works on sandbox but fails on testnet with `RecordedStorageExceeded` — see deep dive below |
 | Max gas per transaction | 1 PGas (protocol 83+) | Deploy fits comfortably; was 300 TGas before protocol 83 |
 | Storage staking cost | ~10 NEAR per 100 KB | 3.2 MB contract ≈ 32 NEAR locked for storage |
 
@@ -463,7 +463,11 @@ The `per_receipt_storage_proof_size_limit` was introduced at **protocol version 
 per_receipt_storage_proof_size_limit: {old: 4_294_967_295, new: 4_000_000}
 ```
 
-The sandbox [overrides this to `usize::max_value()`](https://github.com/near/nearcore/blob/2.10.7/core/parameters/src/config_store.rs#L194) in its benchmarknet configuration, which is what sandbox uses. This means contracts that work on sandbox may fail on testnet/mainnet if they touch >4 MB of storage data in a single receipt. This is a significant divergence that isn't obvious.
+On testnet, our `assemble()` step fails with `Size of the recorded trie storage proof has exceeded the allowed limit (4.0 MB)` because it reads 3.2 MB of chunks and writes 3.2 MB to the "code" key — ~6.4 MB of proof data.
+
+On sandbox, the same operation succeeds. The 4 MB limit IS present in the sandbox's runtime config (via the protocol 69 diff), and the code path at [`chain/chain/src/runtime/mod.rs:1015`](https://github.com/near/nearcore/blob/2.10.7/chain/chain/src/runtime/mod.rs#L1015) does attach a trie recorder with a proof size limit. However, the limit is not enforced in practice on sandbox. The exact mechanism is unclear — it may be related to how the sandbox's trie storage (flat storage, memtries) interacts with the proof recorder, or differences in how single-node validation works vs the multi-validator stateless validation that testnet uses. The `benchmarknet` chain ID [explicitly disables the limit](https://github.com/near/nearcore/blob/2.10.7/core/parameters/src/config_store.rs#L192-L194) via `WitnessConfig::test_disabled()`, but sandbox does not use this override.
+
+**This is a significant divergence**: contracts that work on sandbox may fail on testnet/mainnet if they touch >4 MB of storage data in a single receipt. Always test with the `deploy_direct` strategy when targeting testnet.
 
 ### Protocol 83: gas limit increase
 
