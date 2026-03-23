@@ -456,7 +456,7 @@ Register limits: `max_register_size` = 100 MB, `registers_memory_limit` = 1 GB, 
 
 ### The trie proof limit: sandbox vs testnet
 
-The `per_receipt_storage_proof_size_limit` was introduced at **protocol version 69** as part of NEAR's [stateless validation](https://near.org/blog/stateless-validation) changes. Every storage read or write in a receipt contributes to a merkle proof that validators use to verify execution without having the full state. The proof includes the actual values (not just hashes), so reading 3.2 MB of data means 3.2 MB of proof.
+The `per_receipt_storage_proof_size_limit` was introduced at **protocol version 69** as part of [stateless validation](https://github.com/near/nearcore/pull/11701). Every storage read or write in a receipt contributes to a merkle proof that validators use to verify execution without having the full state. The proof includes the actual values (not just hashes), so reading 3.2 MB of data means 3.2 MB of proof.
 
 ```yaml
 # nearcore/core/parameters/res/runtime_configs/69.yaml
